@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Quiz App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .score-item {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .score-item span {
+            color: #667eea;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            margin-bottom: 30px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card-content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .answer-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .card-counter {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .quiz-complete {
+            display: none;
+            text-align: center;
+        }
+
+        .quiz-complete h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .final-score {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .flashcard {
+                height: 250px;
+            }
+            
+            .card-face {
+                font-size: 1.2em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .answer-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="header">
+            <h1>🎯 Flashcard Quiz</h1>
+        </div>
+
+        <div class="score-container">
+            <div class="score-item">Score: <span id="score">0</span></div>
+            <div class="score-item">Correct: <span id="correct">0</span></div>
+            <div class="score-item">Wrong: <span id="wrong">0</span></div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="card-counter">
+            Question <span id="currentCard">1</span> of <span id="totalCards">10</span>
+        </div>
+
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-front">
+                    <div class="card-content" id="question">
+                        Click to start the quiz!
+                    </div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="card-content" id="answer">
+                        Your answer will appear here
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="prevBtn" onclick="previousCard()" disabled>
+                ← Previous
+            </button>
+            <button class="btn btn-secondary" id="flipBtn" onclick="flipCard()">
+                Flip Card
+            </button>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextCard()" disabled>
+                Next →
+            </button>
+        </div>
+
+        <div class="answer-buttons" id="answerButtons" style="display: none;">
+            <button class="btn btn-success" onclick="markAnswer(true)">
+                ✓ Correct
+            </button>
+            <button class="btn btn-danger" onclick="markAnswer(false)">
+                ✗ Wrong
+            </button>
+        </div>
+
+        <button class="btn btn-primary" id="startBtn" onclick="startQuiz()">
+            Start Quiz
+        </button>
+
+        <div class="quiz-complete" id="quizComplete">
+            <h2>🎉 Quiz Complete!</h2>
+            <div class="final-score">
+                <div>Final Score: <span id="finalScore">0</span>%</div>
+                <div>Correct Answers: <span id="finalCorrect">0</span></div>
+                <div>Wrong Answers: <span id="finalWrong">0</span></div>
+            </div>
+            <button class="restart-btn" onclick="restartQuiz()">
+                Restart Quiz
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Sample flashcard data
+        const flashcards = [
+            {
+                question: "What does HTML stand for?",
+                answer: "HyperText Markup Language"
+            },
+            {
+                question: "Which CSS property is used to change the text color?",
+                answer: "color"
+            },
+            {
+                question: "What does DOM stand for?",
+                answer: "Document Object Model"
+            },
+            {
+                question: "Which HTML tag is used for the largest heading?",
+                answer: "<h1>"
+            },
+            {
+                question: "What is the correct way to link CSS to HTML?",
+                answer: "<link rel='stylesheet' href='style.css'>"
+            },
+            {
+                question: "Which JavaScript method is used to select an element by ID?",
+                answer: "getElementById()"
+            },
+            {
+                question: "What does CSS stand for?",
+                answer: "Cascading Style Sheets"
+            },
+            {
+                question: "Which HTML attribute specifies an alternate text for an image?",
+                answer: "alt"
+            },
+            {
+                question: "What is the default display value for a div element?",
+                answer: "block"
+            },
+            {
+                question: "Which CSS property is used to make text bold?",
+                answer: "font-weight: bold"
+            }
+        ];
+
+        let currentCardIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let isFlipped = false;
+        let quizStarted = false;
+
+        // DOM elements
+        const flashcard = document.getElementById('flashcard');
+        const questionElement = document.getElementById('question');
+        const answerElement = document.getElementById('answer');
+        const scoreElement = document.getElementById('score');
+        const correctElement = document.getElementById('correct');
+        const wrongElement = document.getElementById('wrong');
+        const currentCardElement = document.getElementById('currentCard');
+        const totalCardsElement = document.getElementById('totalCards');
+        const progressFill = document.getElementById('progressFill');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const flipBtn = document.getElementById('flipBtn');
+        const startBtn = document.getElementById('startBtn');
+        const answerButtons = document.getElementById('answerButtons');
+        const quizComplete = document.getElementById('quizComplete');
+
+        function startQuiz() {
+            quizStarted = true;
+            currentCardIndex = 0;
+            score = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            
+            startBtn.style.display = 'none';
+            loadCard();
+            updateUI();
+        }
+
+        function loadCard() {
+            if (currentCardIndex >= flashcards.length) {
+                endQuiz();
+                return;
+            }
+
+            const card = flashcards[currentCardIndex];
+            questionElement.textContent = card.question;
+            answerElement.textContent = card.answer;
+            
+            // Reset card to front
+            flashcard.classList.remove('flipped');
+            isFlipped = false;
+            
+            updateUI();
+        }
+
+        function flipCard() {
+            if (!quizStarted) return;
+            
+            flashcard.classList.toggle('flipped');
+            isFlipped = !isFlipped;
+            
+            if (isFlipped) {
+                flipBtn.textContent = 'Show Question';
+                answerButtons.style.display = 'flex';
+            } else {
+                flipBtn.textContent = 'Flip Card';
+                answerButtons.style.display = 'none';
+            }
+        }
+
+        function markAnswer(isCorrect) {
+            if (isCorrect) {
+                correctAnswers++;
+                score += 10;
+            } else {
+                wrongAnswers++;
+            }
+            
+            updateScore();
+            nextCard();
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcards.length - 1) {
+                currentCardIndex++;
+                loadCard();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function previousCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                loadCard();
+            }
+        }
+
+        function updateUI() {
+            currentCardElement.textContent = currentCardIndex + 1;
+            totalCardsElement.textContent = flashcards.length;
+            
+            const progress = ((currentCardIndex + 1) / flashcards.length) * 100;
+            progressFill.style.width = progress + '%';
+            
+            prevBtn.disabled = currentCardIndex === 0;
+            nextBtn.disabled = currentCardIndex === flashcards.length - 1;
+            
+            if (isFlipped) {
+                answerButtons.style.display = 'flex';
+            } else {
+                answerButtons.style.display = 'none';
+            }
+        }
+
+        function updateScore() {
+            scoreElement.textContent = score;
+            correctElement.textContent = correctAnswers;
+            wrongElement.textContent = wrongAnswers;
+        }
+
+        function endQuiz() {
+            const finalScorePercentage = Math.round((correctAnswers / flashcards.length) * 100);
+            
+            document.getElementById('finalScore').textContent = finalScorePercentage;
+            document.getElementById('finalCorrect').textContent = correctAnswers;
+            document.getElementById('finalWrong').textContent = wrongAnswers;
+            
+            document.querySelector('.flashcard-container').style.display = 'none';
+            document.querySelector('.controls').style.display = 'none';
+            document.querySelector('.card-counter').style.display = 'none';
+            answerButtons.style.display = 'none';
+            quizComplete.style.display = 'block';
+        }
+
+        function restartQuiz() {
+            quizStarted = false;
+            currentCardIndex = 0;
+            score = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            isFlipped = false;
+            
+            // Reset UI
+            questionElement.textContent = 'Click to start the quiz!';
+            answerElement.textContent = 'Your answer will appear here';
+            flashcard.classList.remove('flipped');
+            flipBtn.textContent = 'Flip Card';
+            
+            // Show/hide elements
+            document.querySelector('.flashcard-container').style.display = 'block';
+            document.querySelector('.controls').style.display = 'flex';
+            document.querySelector('.card-counter').style.display = 'block';
+            quizComplete.style.display = 'none';
+            startBtn.style.display = 'block';
+            answerButtons.style.display = 'none';
+            
+            // Reset scores
+            updateScore();
+            progressFill.style.width = '0%';
+        }
+
+        // Initialize total cards display
+        totalCardsElement.textContent = flashcards.length;
+    </script>
+</body>
+</html>
